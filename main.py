@@ -1,16 +1,30 @@
 import random
-#import math
 import pygame
-#import pygame.mixer
-#import klafim
 red = (255, 0, 0)
 pink = (255, 174, 201)
 white= (255,255,255)
-IMAGE='b.png'
-class klafim():
+
+IMAGE= input('your b.png path (if it in the same folder that the game file is press enter):')+'b.png'
+# IMAGE= requests.get('https://github.com/yairMoshkovitz/blocks_game/raw/main/b.png').content
+
+level = ''
+while not level:
+
+    try:
+        level = int(input("your level is (1-15, try 7): ",))
+        if level >  15 or level < 1:
+            level = ''
+            erorr
+    except:
+        level = int(input("try again, your level is (1-15): ",))
+print("press on mouse to start, and don't forget in the end to see your scors 'here' in the end ")
+
+
+
+
+class  CARD():  # take the class CARD from memory game
     def __init__(self,x,y,color,t =30 ,z=40):
        
-        #super(klafim, self)._init_()
         self.color = color
         self.x = 50+x
         self.y = 20+y
@@ -42,7 +56,7 @@ game_over =False
            
 
 rohv = 1200
-gova = 700
+gova = 600
 
 
 screen = pygame.display.set_mode((rohv, gova))
@@ -57,7 +71,7 @@ pygame.display.set_caption("yair")
 
 
 
-class bloks (klafim):
+class BLOCK (CARD):
     def __init__(self,x,y,color,t =t ,z=z):
        
         #klafim.__init__(self,x,y,color)
@@ -103,7 +117,7 @@ class bloks (klafim):
         j = 0
        
         for ball in all_balls:
-            if bloks.cheak_ball(self,ball.x,ball.y,ball.r) :
+            if BLOCK.cheak_ball(self,ball.x,ball.y,ball.r) :
                
                 all_balls[j].vy = -all_balls[j].vy
            
@@ -118,7 +132,7 @@ class bloks (klafim):
         k = 0
 #        ball_num = 0
         for ball in all_balls:
-            open_self =  bloks.cheak_ball2(self,ball.x,ball.y,ball.r*2)
+            open_self =  BLOCK.cheak_ball2(self,ball.x,ball.y,ball.r*2)
             if open_self ==2:
                    
                 all_balls[k].vy = -(all_balls[k].vy+level)-1
@@ -161,20 +175,19 @@ class Ball(pygame.sprite.Sprite):
         self.image.set_colorkey(pink)
 
 
-level = ''
-while not level:
-
-    try:
-        level = int(input("your level is (1-15): ",))
-        if level >  15 or level < 1:
-            level = ''
-            erorr
-    except:
-        level = int(input("try again, your level is (1-15): ",))
-print("press on mause to start, and dot forget in the end to see your scors")
 
 num_of_row =4
-all_balls = [Ball(10+t*num_of_row,10+t*num_of_row,level) ]
+
+all_balls = []
+while not all_balls:
+    try:
+        all_balls = [Ball(10+t*num_of_row,10+t*num_of_row,level) ]
+    except:
+        print('your path is rong')
+        IMAGE= input('your b.png path (if it in the same folder that the game file is press enter):')+'b.png'
+        all_balls = [Ball(10+t*num_of_row,10+t*num_of_row,level) ]
+
+    
 x=t//2
 # all_balls += [Ball(10+t*num_of_row,10+t*num_of_row,-level) ]
 y=0
@@ -201,7 +214,7 @@ def line_of_blokim():
 
         l=tuple(k)
 
-        blok = bloks(x,y,l)
+        blok = BLOCK(x,y,l)
         new_bloks += [blok]
        
         x+=z
@@ -241,8 +254,8 @@ while True:
                     else:
                         mistah_long.y += all_balls[0].vy
                         mistah_short.y += all_balls[0].vy
-                    mistah_long = bloks(mistah_long.x,mistah_long.y,mistah_long.color,20,len_mistach+50)
-                    mistah_short = bloks(mistah_short.x,mistah_short.y,mistah_short.color,20,len_mistach-50)
+                    mistah_long = BLOCK(mistah_long.x,mistah_long.y,mistah_long.color,20,len_mistach+50)
+                    mistah_short = BLOCK(mistah_short.x,mistah_short.y,mistah_short.color,20,len_mistach-50)
                  #   pygame.display.flip()
                     if mistah_long.y+15 > mistah.y and mistah_long.x+mistah_long.z//2> mistah.x-mistah.z//2 and mistah_long.x - mistah_long.z//2< mistah.x+mistah.z//2 and mistah_long.color != red:
                         len_mistach +=50
@@ -274,8 +287,10 @@ while True:
                     if ball.vx >19.9 : # if the speed is too mach get it down and turn all the loop paster
                        
                         for a_ball in all_balls:
-                            a_ball.vy = a_ball.vy//3
-                            a_ball.vx = a_ball.vx//2
+                            if a_ball.vy > 4 :
+                                a_ball.vy = a_ball.vy//3
+                            if a_ball.vx > 4 :
+                                a_ball.vx = a_ball.vx//2
                         time +=5
                        
                     if ball.vy >19.5 : # ...
@@ -298,7 +313,7 @@ while True:
                         ball.y =( ball.r)
                         ball.vy = -ball.vy
                
-                mistah = bloks(mouse[0],gova-21,white,20,len_mistach)
+                mistah = BLOCK(mouse[0],gova-21,white,20,len_mistach)
                 num_ball = mistah.cheak_all_balls2(all_balls)
 
 
@@ -314,12 +329,12 @@ while True:
                 if time > (p): # add new line when vy is bigger
                     p += time + 9
                     if time<10:
-                        mistah_long = bloks(mouse[0],150,white,20,len_mistach+50)
-                        mistah_short = bloks(mouse[0]+400,-100,white,20,len_mistach-50)
+                        mistah_long = BLOCK(mouse[0],150,white,20,len_mistach+50)
+                        mistah_short = BLOCK(mouse[0]+400,-100,white,20,len_mistach-50)
                     elif mistah_long.color != white:
-                        mistah_long = bloks(mouse[0],150,white,20,len_mistach+50)
+                        mistah_long = BLOCK(mouse[0],150,white,20,len_mistach+50)
                     if mistah_short.color != white:  
-                        mistah_short = bloks(mouse[0]+400,-100,white,20,len_mistach-50)
+                        mistah_short = BLOCK(mouse[0]+400,-100,white,20,len_mistach-50)
                    
                     for blok in bloks2:
                         blok.y +=t
@@ -347,7 +362,7 @@ while True:
 
 
 
-                    blok2 = bloks(blok.x,blok.y,blok.color)
+                    blok2 = BLOCK(blok.x,blok.y,blok.color)
                     blok.cheak_all_balls(all_balls)
 
                     if blok.open == 1 :
@@ -371,5 +386,4 @@ while True:
                 clock.tick(20+time)
 
                 screen.fill((0,0,0))
-
                
