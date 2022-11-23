@@ -1,28 +1,61 @@
 import random
 import pygame
-red = (255, 0, 0)
+from io import BytesIO
+import requests
+
+
+
+red = (255, 0, 0)                    # grapic vars
 pink = (255, 174, 201)
 white= (255,255,255)
 
-IMAGE= input('your b.png path (if it in the same folder that the game file is press enter):')+'b.png'
-# IMAGE= requests.get('https://github.com/yairMoshkovitz/blocks_game/raw/main/b.png').content
+
+try:
+    wight = int(input('screen wight:'))
+except:
+    wight = 1200
+try:
+    hight = int(input('screen hight:'))
+except:
+    hight = 650
+
+t = 40            # hight of block
+z = wight//(t//3)  # wight of block, by the sceen
+
+
+
+
+url = 'https://github.com/yairMoshkovitz/blocks_game/raw/main/b.png'
+
+IMAGE = ''
+while not IMAGE:      # try to load image from my git
+    try:
+        res_con = requests.get(url).content
+        IMAGE = BytesIO(res_con)
+        
+        
+    except:     # load dawnload image from user path
+        print('you\'re not conect')
+        IMAGE= input('input your b.png path (if it in the same folder that the game file is press enter):')+'b.png' 
+
+
 
 level = ''
-while not level:
+while not level:     # get the client level
 
     try:
-        level = int(input("your level is (1-15, try 7): ",))
-        if level >  15 or level < 1:
+        level = int(input("your level is (1-10, try 5): ",))
+        if level >  10 or level < 1:
             level = ''
             erorr
     except:
-        level = int(input("try again, your level is (1-15): ",))
+        level = int(input("try again, your level is (1-10): ",))
 print("press on mouse to start, and don't forget in the end to see your scors 'here' in the end ")
 
 
 
 
-class  CARD():  # take the class CARD from memory game
+class  CARD():        # take the class CARD from memory game
     def __init__(self,x,y,color,t =30 ,z=40):
        
         self.color = color
@@ -31,50 +64,31 @@ class  CARD():  # take the class CARD from memory game
         pygame.draw.line(screen, white , [self.x ,self.y], [self.x, self.y+30], 40)
         #pygame.display.flip()
         self.open = 0
-        self.z = z
-        self.t = t
+        self.z = z  # wight of block
+        self.t = t  # hight of block
        
     def close(self):
         self.open = 0
         pygame.draw.line(screen, white , [self.x ,self.y], [self.x, self.y+30], 40)
                
            
-    def cheak(self,a,b):
+    def check(self,a,b):
         if self.x-(self.z/2) < a <self.x+self.z and self.y <b < self.y+self.t :
             self.open = 1
-    def cheak_left(self,a,b):
+            return True
+
+    def check_left(self,a,b):
         if self.x-(self.z/2) < a <self.x and self.y < b < self.y+self.t :
-            self.open = 2
-    def cheak_right(self,a,b):
+            return True
+
+    def check_right(self,a,b):
         if self.x+(self.z/2) > a >self.x and self.y < b < self.y+self.t :
-            self.open = 3
             return True
            
-           
-           
-game_over =False          
-           
 
-rohv = 1200
-gova = 600
-
-
-screen = pygame.display.set_mode((rohv, gova))
-white =( 255, 255, 255)
-clock = pygame.time.Clock()
-t = 40
-z = rohv//(t//3)
-
-
-pygame.display.set_caption("yair")
-
-
-
-
-class BLOCK (CARD):
+class BLOCK (CARD):  
     def __init__(self,x,y,color,t =t ,z=z):
        
-        #klafim.__init__(self,x,y,color)
         self.color = color
         self.open = 0
         self.z = z
@@ -86,180 +100,148 @@ class BLOCK (CARD):
         #pygame.display.flip()
 
        
-    def cheak_ball(self,x,y,r):
+    def check_ball(self,x,y,r):  # check if the ball touch the block 
         for i in range((r*2)):
-            if self.open == 1:
+            if self.check(x,y+i) or self.check(x+i,y) or self.check(x+(r*2),y+i) or self.check(x+i,y+(r*2)):
                 return True
-            else:
-                self.cheak(x,y+i)
-                self.cheak(x+i,y)
-                self.cheak(x+(r*2),y+i)
-                self.cheak(x+i,y+(r*2))
-   
-    def cheak_ball2(self,x,y,r):
-        for i in range((r*2)):
-            if self.open < 2 :
-                # self.cheak3(x,y+i)
-                self.cheak_right(x+i,y)
-                self.cheak_right(x+(r*2),y+i)
-                self.cheak_right(x+i,y+(r*2))
-           
-                self.cheak_left(x,y+i)
-                self.cheak_left(x+i//2,y)
-               # self.cheak2(x+(r*2),y+i)
-                self.cheak_left(x+i//2,y+(r*2))
-            elif self.open == 3:
+                
+    def check_ball2(self,x,y,r):  # check if the ball touch the buttum_face in right or left side
+        #for i in range((r*2)):
+            if self.check_right(x,y) or self.check_right(x+(r*2),y) or self.check_right(x,y+r) or self.check_right(x+r*2,y+r):
                 return 3
-            else:
+            elif self.check_left(x,y) or self.check_left(x+r*2,y) or self.check_left(x+(r*2), y+r) or self.check_left(x,y+r):
                 return 2
                
-    def cheak_all_balls(self,all_balls) :
-        j = 0
+    def check_all_balls(self,all_balls) :
+        
        
         for ball in all_balls:
-            if BLOCK.cheak_ball(self,ball.x,ball.y,ball.r) :
+            if BLOCK.check_ball(self,ball.x,ball.y,ball.r) : # if the ball 
                
-                all_balls[j].vy = -all_balls[j].vy
+                ball.vy = -ball.vy
            
-                if all_balls[j].y < 0:
-                    all_balls[j].y -= t//2
+                if ball.y < 0:  # if the ball loss the screen
+                    ball.y -= t//2
                 else:
-                    all_balls[j].y += t//2
+                    ball.y += t//2
              
-            j += 1
+           
        
-    def cheak_all_balls2(self,all_balls) :
-        k = 0
+    def check_all_balls2(self,all_balls) :
 #        ball_num = 0
         for ball in all_balls:
-            open_self =  BLOCK.cheak_ball2(self,ball.x,ball.y,ball.r*2)
-            if open_self ==2:
+            open_self =  BLOCK.check_ball2(self,ball.x,ball.y,ball.r*2)
+            if open_self == 2:
                    
-                all_balls[k].vy = -(all_balls[k].vy+level)-1
-                if all_balls[k].vx>0:
-                     all_balls[k].vx = -all_balls[k].vx-level
+                ball.vy = -(ball.vy+level)-1
+                if ball.vx>0:
+                     ball.vx = -ball.vx-level-2
 
-            elif open_self ==3:
-                all_balls[k].vy = -(all_balls[k].vy+level)-1
-                if all_balls[k].vx <0:
-                       all_balls[k].vx = -all_balls[k].vx+level              
+            elif open_self == 3:
+                ball.vy = -(ball.vy+level)-1
+                if ball.vx <0:
+                       ball.vx = -ball.vx+level+2              
            
-            k +=1
-       # return ball_num
-   
-   
-   
-#                     all_balls[num_ball-1].vy = -(all_balls[num_ball-1].vy+level)
-#                     if all_balls[num_ball-1].vx>0:
-#                         all_balls[num_ball-1].vx = -all_balls[num_ball-1].vx
-#                         #print(vx)
-#                 elif mistah.open == 3:
-#                     all_balls[num_ball-1].vy = -(all_balls[num_ball-1].vy+level)
-#                     if all_balls[num_ball-1].vx <0:
-#                         all_balls[num_ball-1].vx = -all_balls[num_ball-1].vx
- 
-
-   
+  
            
 class Ball(pygame.sprite.Sprite):
     def __init__(self,x,y,level):
         super(Ball,self).__init__()
         self.x = x
         self.y = y
-        self.r =12
+        self.r = 18
         self.vx = level
         self.vy = level
        
+        try:
+            self.image=pygame.image.load(IMAGE).convert()
+            self.image.set_colorkey(pink)
 
-        self.image=pygame.image.load(IMAGE).convert()
-        self.image.set_colorkey(pink)
+        except:
+            try:
+                self.image= all_balls[0].image
+            except:
+                print('error maybe your path is rong')
+                pygame.quit()
 
+
+            
+game_over =False          
+
+screen = pygame.display.set_mode((wight, hight))
+
+clock = pygame.time.Clock()
+
+pygame.display.set_caption("yair game")
 
 
 num_of_row =4
-
-all_balls = []
-while not all_balls:
-    try:
-        all_balls = [Ball(10+t*num_of_row,10+t*num_of_row,level) ]
-    except:
-        print('your path is rong')
-        IMAGE= input('your b.png path (if it in the same folder that the game file is press enter):')+'b.png'
-        all_balls = [Ball(10+t*num_of_row,10+t*num_of_row,level) ]
-
-    
-x=t//2
-# all_balls += [Ball(10+t*num_of_row,10+t*num_of_row,-level) ]
+all_balls = [Ball(10+t*num_of_row,10+t*num_of_row,level) ]
+  
+x=  t//2
 y=0
-bloks2 =[]
-bloks3 =[]
+blocks2 =[]
 pygame.init()
 time = 0
 p = time
-num_of_blooks = 0
-len_mistach =300 -level *7
-
+num_of_blocks = 0
+len_mistach = 300 -level *7
 down = 0
 
 
-def line_of_blokim():
-    x=z//2
+def line_of_blocks():
+    x= z//2 # 
     y=0
-    new_bloks =[]
-    while x < rohv-20 :
-        k=[0,0,0]
-
-        for i in range(3):
-            k[i] = random.randint(0,255)
-
-        l=tuple(k)
-
-        blok = BLOCK(x,y,l)
-        new_bloks += [blok]
+    new_blocks =[]
+    while x < wight-20 :
+    
+        rand_color = tuple([random.randint(0,255) for i in range(3)])
+        block = BLOCK(x,y,rand_color)
+        new_blocks += [block]
        
-        x+=z
-       
-#    print(vy ,vx)
-    return new_bloks
+        x += z # the the hight of block start position
+
+    return new_blocks
    
-bloks2 = line_of_blokim()
+blocks2 = line_of_blocks()   # made num of rows
 for i in range(num_of_row-1):
-    for blok in bloks2:
+    for blok in blocks2:
         blok.y += t
-    bloks2 += line_of_blokim()    
+    blocks2 += line_of_blocks()    
 clock.tick(0.2)
-pos = True
-# while pos :
-#     for event in pygame.event.get():    
-#         if event.type == pygame.MOUSEBUTTONUP:
-#             pos =False
+
+
+# pos = True
+
 while True:
-    mouse = pygame.mouse.get_pos()
+    mouse = pygame.mouse.get_pos()                       # start when pres mouse
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
        
             while True:
-                if time >80:
+                if time > 70:                            # slow the game loop 
                     time = 50
-                for event in pygame.event.get(): # stop when press quit
+
+                for event in pygame.event.get():                # stop when press quit
                     mouse = pygame.mouse.get_pos()
                     if event.type == pygame.QUIT:
                         pygame.quit()
 
                
-                try:
-                    if all_balls[0].vy < 0:
+                try:                                        # if there is a new size of buttum_face
+                    if all_balls[0].vy < 0:   
                         mistah_short.y  -= all_balls[0].vy
                         mistah_long.y -= all_balls[0].vy
                     else:
                         mistah_long.y += all_balls[0].vy
                         mistah_short.y += all_balls[0].vy
+
                     mistah_long = BLOCK(mistah_long.x,mistah_long.y,mistah_long.color,20,len_mistach+50)
                     mistah_short = BLOCK(mistah_short.x,mistah_short.y,mistah_short.color,20,len_mistach-50)
                  #   pygame.display.flip()
                     if mistah_long.y+15 > mistah.y and mistah_long.x+mistah_long.z//2> mistah.x-mistah.z//2 and mistah_long.x - mistah_long.z//2< mistah.x+mistah.z//2 and mistah_long.color != red:
-                        len_mistach +=50
-                        mistah_long.color = red
+                        len_mistach +=50                    # the buttum_face catch the new buttum_face
+                        mistah_long.color = red                 # to be shur that it's chang only one time
                     elif mistah_long.y > mistah.y :
                         mistah_long.color = red
                     if mistah_short.y+15 > mistah.y and mistah_short.x+mistah_short.z//2> mistah.x-mistah.z//2 and mistah_short.x - mistah_short.z//2< mistah.x+mistah.z//2 and mistah_short.color != red:
@@ -277,58 +259,50 @@ while True:
                     if ball.vy ==0:
                         ball.vy = 1
                    
-                    ball.x += ball.vx # add the speed
+                    ball.x += ball.vx   # add the speed
                     ball.y += ball.vy
                    
                     screen.blit(ball.image,[ball.x,ball.y])
                    
 
                        
-                    if ball.vx >19.9 : # if the speed is too mach get it down and turn all the loop paster
+                    if ball.vx > 14.9 :             # if the speed is too mach get it down and turn all the loop faster
                        
                         for a_ball in all_balls:
                             if a_ball.vy > 4 :
-                                a_ball.vy = a_ball.vy//3
+                                a_ball.vy = a_ball.vy//3     # because the loop faster the speed need to be slower
                             if a_ball.vx > 4 :
-                                a_ball.vx = a_ball.vx//2
+                                a_ball.vx = a_ball.vx//3
                         time +=5
                        
-                    if ball.vy >19.5 : # ...
+                    if ball.vy > 14.5 : # ...
                         for a_ball in all_balls:
                             a_ball.vy = a_ball.vy//3
                             a_ball.vx = a_ball.vx//2
                         time +=5
                        
 
-                #     mistah_long = bloks(mouse[0],50,white,20,300- level*7)
-                #     mistah_long.y += vy
-                #     mistah_long = bloks(mistah_long.x,mistah_long.y,white,20,300- level*7)
-                    if  ball.x >( rohv - ball.r*5): # turn vx to ather side when x thoch the end
-                        ball.x =( rohv - ball.r*5)
+         
+
+
+                    if  ball.x >( wight - ball.r*5):             # turn vx to anther side when x thoch the end
+                        ball.x =( wight - ball.r*5)
                         ball.vx = -ball.vx - 2
-                    elif  ball.x <( ball.r): # ...thoch the start
+                    elif  ball.x <( ball.r):                 # ...thoch the start
                         ball.x =( ball.r)
                         ball.vx = -ball.vx + 2
-                    if  ball.y <( ball.r): # turn vy to ?down when y thoch the ?
+                    if  ball.y <( ball.r):                   # turn vy to ?down when y thoch the ?
                         ball.y =( ball.r)
                         ball.vy = -ball.vy
                
-                mistah = BLOCK(mouse[0],gova-21,white,20,len_mistach)
-                num_ball = mistah.cheak_all_balls2(all_balls)
+                mistah = BLOCK(mouse[0], hight-21, white, 20, len_mistach)
+                
+                num_ball = mistah.check_all_balls2(all_balls)
 
 
-#                 if mistah.open == 2 :    # add vy when thoch the mishth
-#                     all_balls[num_ball-1].vy = -(all_balls[num_ball-1].vy+level)
-#                     if all_balls[num_ball-1].vx>0:
-#                         all_balls[num_ball-1].vx = -all_balls[num_ball-1].vx
-#                         #print(vx)
-#                 elif mistah.open == 3:
-#                     all_balls[num_ball-1].vy = -(all_balls[num_ball-1].vy+level)
-#                     if all_balls[num_ball-1].vx <0:
-#                         all_balls[num_ball-1].vx = -all_balls[num_ball-1].vx
-                if time > (p): # add new line when vy is bigger
+                if time > (p):                              # new size of buttum_face and add new line when vy is bigger
                     p += time + 9
-                    if time<10:
+                    if time < 10:
                         mistah_long = BLOCK(mouse[0],150,white,20,len_mistach+50)
                         mistah_short = BLOCK(mouse[0]+400,-100,white,20,len_mistach-50)
                     elif mistah_long.color != white:
@@ -336,51 +310,49 @@ while True:
                     if mistah_short.color != white:  
                         mistah_short = BLOCK(mouse[0]+400,-100,white,20,len_mistach-50)
                    
-                    for blok in bloks2:
+                    blocks2 += line_of_blocks()
+                    
+                    for blok in blocks2: 
                         blok.y +=t
-                        if blok.y> gova:
-                            game_over = True  
-                    bloks2 += line_of_blokim()
+                        if blok.y > hight:
+                            game_over = True 
+
+                    
 
                
-                if time > 22 * len(all_balls):
+                if time > 30 * len(all_balls):                                      # add more ball
                         all_balls += [Ball(10+t*num_of_row,10+t*num_of_row,-level) ]
+
                    
-#                 if True in[ball.y > gova for ball in all_balls] :
-#                     print([ (ball.y, ball.y > gova) for ball in all_balls] )
-                if game_over or True in[ball.y > gova for ball in all_balls] : # game over when you lose the ball or the blok thoch the end
+                if game_over or True in[ball.y > hight for ball in all_balls] : # game over when you lose the ball or the blok thoch the end
                     screen.fill((255,255,255))
                     pygame.display.flip()
-                    print(f"game over your scors is: {num_of_blooks*level**2}")
+                    print(f"game over your scors is: {num_of_blocks*level**2}")
                     clock.tick(1)
                     pygame.quit()
 
 
                 i = 0
-                del_bloks=[]
-                for blok in bloks2: # remove the thoch's blooks
+                del_blocks=[]
+                for block in blocks2: # remove the "thochs" blooks
 
+                    block_new = BLOCK(block.x, block.y, block.color) # bilt the blocks
 
+                    block.check_all_balls(all_balls)
 
-                    blok2 = BLOCK(blok.x,blok.y,blok.color)
-                    blok.cheak_all_balls(all_balls)
-
-                    if blok.open == 1 :
-                        del_bloks+=[i]
-                        num_of_blooks += 1
-                        down = 1
+                    if block.open == 1 :
+                        del_blocks += [i]
+                        num_of_blocks += 1
+                        down += 1
                     i+=1
 
-                if down==1:  # if ball thoch any blook turn the ball down
-                    l = len(bloks2)
-                    for i in del_bloks:
-                         del bloks2 [-l+i]
-                   
-                   
+                if down > 0 :  # if ball thoch any blook turn the ball down
+                    
+                    for i in range(down):
+                         del blocks2[del_blocks.pop()]
+
                     down = 0
 
-
-               
 
                 pygame.display.flip()
                 clock.tick(20+time)
